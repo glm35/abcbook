@@ -47,6 +47,38 @@ un fichier le plus lisible possible:
   si cela est nécessaire (e.g. spécifier manuellement le groupement des
   notes).
 
+Conversion LilyPond vers Lilypond
+=================================
+
+Historiquement::
+
+   ${stage1_outdir}/%.ly : ${src}/%.ly
+    @echo [CONVERT-LY] $<
+    @${CONVERT_LY} $< > $@ 2>${stage1_outdir}/convert-ly.log
+
+Problèmes:
+
+* convert-ly looses the encoding (uses UTF-8?)
+* invoking convert-ly does not work when the input version is the same
+  as the output version
+
+Aujourd'hui, plus de conversion, la règle réalise une simple copie.  A l'usage
+sur plusieurs années (2005-2018), cela ne pose pas de problème.
+
+Genération du PDF
+=================
+
+::
+
+   dvi --dvips--> ps --dvipdf--> pdf
+
+On ne génère pas directement le PDF à partir du DVI avec dvipdf.  Plusieurs
+problèmes à l'usage si on le fait:
+
+- les caractères # (dièse) des noms d'accord LilyPond sont perdus lors d'un
+  appel à dvipdf;
+- le format de la page est "US letter" au lieu de "A4".
+
 Makefile
 ========
 

@@ -10,13 +10,14 @@ SHELL = /bin/bash
 # Paths for abcbook and its dependencies
 #
 # rem: system_local_latex_packages_dir may vary across systems, eg:
-# - Mint: system_local_latex_packages_dir=/usr/local/share/texmf/tex/latex
-# - Fedora 28: system_local_latex_packages_dir:=/usr/local/texlive/texmf-local/tex/latex/
+# - Mint: /usr/local/share/texmf/tex/latex
+# - Fedora 28: /usr/local/texlive/texmf-local/tex/latex/
 #
 
 local_share_abcbook_dir = ~/.local/share/abcbook
 local_bin_dir = ~/.local/bin
-system_local_latex_packages_dir := $(shell kpsewhich -var-value TEXMFLOCAL)/tex/latex
+system_local_latex_packages_dir := \
+    $(shell kpsewhich -var-value TEXMFLOCAL)/tex/latex
 
 
 #
@@ -33,22 +34,26 @@ FEDORA_PACKAGES = texlive-scheme-basic texlive-collection-fontsrecommended \
 # Install abcbook dependencies
 #
 
-install-deps-mint : install-mint-packages ${system_local_latex_packages_dir}/gchords.sty abc4ly
+install-deps-mint : install-mint-packages \
+                    $(system_local_latex_packages_dir)/gchords.sty \
+                    abc4ly
 
 install-mint-packages :
 	@echo [APT] Install abcbook dependencies for Mint
-	apt install ${MINT_PACKAGES}
+	apt install $(MINT_PACKAGES)
 
-install-deps-fedora : install-fedora-packages ${system_local_latex_packages_dir}/gchords.sty abc4ly
+install-deps-fedora : install-fedora-packages \
+                      $(system_local_latex_packages_dir)/gchords.sty \
+                      abc4ly
 
 install-fedora-packages :
 	@echo [DNF] Install abcbook dependencies for Fedora
-	dnf install ${FEDORA_PACKAGES}
+	dnf install $(FEDORA_PACKAGES)
 
-${system_local_latex_packages_dir}/gchords.sty:
+$(system_local_latex_packages_dir)/gchords.sty:
 	@echo [INSTALL] gchords.sty system-wide
-	mkdir -p ${system_local_latex_packages_dir}
-	cp third-party/gchords/gchords.sty ${system_local_latex_packages_dir}
+	mkdir -p $(system_local_latex_packages_dir)
+	cp third-party/gchords/gchords.sty $(system_local_latex_packages_dir)
 	texhash
 
 abc4ly :
@@ -59,40 +64,44 @@ abc4ly :
 # Install abcbook
 #
 
-install-local : ${local_share_abcbook_dir} ${local_bin_dir}
+install-local : $(local_share_abcbook_dir) $(local_bin_dir)
 	@echo [INSTALL] abcbook for local user
-	rm -f ${local_bin_dir}/gen_tex_tunebook.py 
-	rm -f ${local_share_abcbook_dir}/abcbook.mk
-	cp buildtools/gen_tex_tunebook.py ${local_bin_dir}
-	cp buildtools/abcbook.mk ${local_share_abcbook_dir}
+	rm -f $(local_bin_dir)/gen_tex_tunebook.py
+	rm -f $(local_share_abcbook_dir)/abcbook.mk
+	cp buildtools/gen_tex_tunebook.py $(local_bin_dir)
+	cp buildtools/abcbook.mk $(local_share_abcbook_dir)
 
-install-devel-local : ${local_share_abcbook_dir} ${local_bin_dir}
+install-devel-local : $(local_share_abcbook_dir) $(local_bin_dir)
 	@echo [INSTALL] devel version of abcbook for local user
-	rm -f ${local_bin_dir}/gen_tex_tunebook.py 
-	rm -f ${local_share_abcbook_dir}/abcbook.mk
-	ln -sr buildtools/gen_tex_tunebook.py ${local_bin_dir}
-	ln -sr buildtools/abcbook.mk ${local_share_abcbook_dir}
+	rm -f $(local_bin_dir)/gen_tex_tunebook.py
+	rm -f $(local_share_abcbook_dir)/abcbook.mk
+	ln -sr buildtools/gen_tex_tunebook.py $(local_bin_dir)
+	ln -sr buildtools/abcbook.mk $(local_share_abcbook_dir)
 
-${local_share_abcbook_dir} :
-	mkdir -p ${local_share_abcbook_dir}
+$(local_share_abcbook_dir) :
+	mkdir -p $(local_share_abcbook_dir)
 
-${local_bin_dir} :
-	mkdir -p ${local_bin_dir}
+$(local_bin_dir) :
+	mkdir -p $(local_bin_dir)
 
 
 #
-# Clean & help
+# Help
 #
 
-clean :
-	@echo [CLEANING]
-#	@-rm -rf ${stage1_outdir}
+define ABCBOOK_HELP_MESSAGE
+Targets:
+    install-deps-mint: install abcbook dependencies on Linux Mint
+                       (needs root access)
+    install-deps-fedora: install abcbook dependencies on Fedora
+                         (needs root access)
+    install-local: install abcbook for the local user
+    install-devel-local: install devel version of abcbook for local user
+    help: show this message
+endef
+
+export ABCBOOK_HELP_MESSAGE
 
 help :
-	@echo "Targets:"
-	@echo "    install-deps-mint: install abcbook dependencies on Linux Mint (needs root access)"
-	@echo "    install-deps-fedora: install abcbook dependencies on Fedora (needs root access)"
-	@echo "    install-local: install abcbook for the local user"
-	@echo "    install-devel-local: install devel version of abcbook for local user"
-	@echo "    clean: remove all the generated files"
+	@echo "$$ABCBOOK_HELP_MESSAGE"
 

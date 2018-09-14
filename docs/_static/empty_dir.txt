@@ -1,0 +1,3 @@
+Dummy file to prevent sphinx from complaining during the "copying static files"
+step.
+

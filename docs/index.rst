@@ -24,6 +24,7 @@ abcbook: un générateur de recueil de partitions
    developer_docs/issues
    developer_docs/ideas
    developer_docs/design_notes
+   developer_docs/coding_conventions
 
 Indices and tables
 ==================
