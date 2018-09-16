@@ -1,0 +1,59 @@
+% test-tunebook.abc
+
+X:1
+T:Crock of gold
+C:Trad.
+R:Reel
+S:Guillaume Le Bigot (session au Oan's pub)
+D:Lunasa: Otherworld (1999)
+M:2/2
+L:1/8
+K:G
+|: "G" B2dB BAGE | "Am" GGGA GED2 | "D" DEGA "G" BGGG | Be"C"dB "D"eAAA |
+   "G" B2dB BAGE | "Am" GGGA GED2 | "G"ggg"G"d eg"C"d2 | DE"D"GA "G"BGG2 :|
+|: "Am" eaaa "Em"bagb | "D"a2ba "C"ged2 | "G"gedB GB"G"Bd | eg"C"dB "D"BAAG |
+   "Am" Eaaa "Em"bagb | "D"a2ba "C"ged2 | "G"ggg"G"d eg"C"d2 | DE"D"GA "G"BGG2 :|
+
+X:2
+T:Kitty Lie Over
+C:Trad.
+D:Mick O'Brien & Caoimh\'in \'O Raghallaigh: Kitty lie over (2003)
+I:touch
+R:Jig
+M:6/8
+Q:150
+K:D
+|: AFD DFA | Add ABA | ABA FFF | GFG EFG |
+   AFD DFA | Add ABA | ABA F2E |1 EDD d2B :|2 EDD D2e
+|: fdd ede | fdd d2e | fdd def | gee efg
+           |1 fed B2A | AdF G2B | ABA F2E | EDD D2e :|
+	   [2 afd B2A | AdF G2B | ABA F2E | EDD d2B |
+
+X:3
+T:The Monaghan Twig
+R:Reel
+D:Paddy Keenan: Poirt an Ph\'iobaire
+S:Tony McManus (stage à Ti Kendalc'h, avril 2003)
+M:2/2
+L:1/8
+K:Amix
+|| z4 z2ed |: "A (no 3d)" cAAB cded | cAAG E2ed 
+           | cAAB cded | "G/A" BAGB d2ed :|
+             "A (no 3d)" cdef gf "G/A" ed | cdef "A" e2ed
+           | cd "A (no 3d)" ef g2ge | "G/A" dBGB d2ed 
+           | "A (no 3d)" cded cd "G/A" ed | cAAA "A" cdef 
+           | g2 "G/A" ge deed | "G/A" BAGB d4 |]
+
+X:4
+T:The Mountain Road
+R:Reel
+C:Trad.
+D:John Doyle: Irish rhythm guitar
+M:2/2
+L:1/8
+Q:1/4 = 160
+K:D
+%
+|: F2FA BFAF | FFAF EFDE |1 F2FA BFAF|GEFD EDBA :|2 FAAA BAFB | ABde fddc |
+   d2dB ADFA | dcde fgfe | d2Bd ADFA | GEFD EFD2 |
+   dedB ADFA | dcde fgfe | dedB ADFA | GEFD EDBA |

@@ -66,15 +66,19 @@ abc4ly :
 
 install-local : $(local_share_abcbook_dir) $(local_bin_dir)
 	@echo [INSTALL] abcbook for local user
+	rm -f $(local_bin_dir)/abcsplit.py
 	rm -f $(local_bin_dir)/gen_tex_tunebook.py
 	rm -f $(local_share_abcbook_dir)/abcbook.mk
+	cp buildtools/abcsplit.py $(local_bin_dir)
 	cp buildtools/gen_tex_tunebook.py $(local_bin_dir)
 	cp buildtools/abcbook.mk $(local_share_abcbook_dir)
 
 install-devel-local : $(local_share_abcbook_dir) $(local_bin_dir)
 	@echo [INSTALL] devel version of abcbook for local user
+	rm -f $(local_bin_dir)/abcsplit.py
 	rm -f $(local_bin_dir)/gen_tex_tunebook.py
 	rm -f $(local_share_abcbook_dir)/abcbook.mk
+	ln -sr buildtools/abcsplit.py $(local_bin_dir)
 	ln -sr buildtools/gen_tex_tunebook.py $(local_bin_dir)
 	ln -sr buildtools/abcbook.mk $(local_share_abcbook_dir)
 
