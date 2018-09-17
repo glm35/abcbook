@@ -34,6 +34,7 @@ ABC2LY = abc4ly.py
 build_outdir = _build
 stage1_outdir = $(build_outdir)/out.stage1
 stage2_outdir = $(build_outdir)/out.stage2
+abcsplit_outdir = $(build_outdir)/splitabc
 src = tunes
 
 
@@ -42,8 +43,11 @@ src = tunes
 #     (in chronological order)
 # ------------------------------------------------------------------------ 
 
+include $(build_outdir)/splitabc.mk
+
 lyfiles := $(patsubst $(src)/%.abc,$(stage1_outdir)/%.ly,$(wildcard $(src)/*.abc))
 lyfiles2 := $(patsubst $(src)/%.ly,$(stage1_outdir)/%.ly,$(wildcard $(src)/*.ly))
+lyfiles3 := $(patsubst $(abcsplit_outdir)/%.abc,$(stage1_outdir)/%.ly,$(SPLIT_ABC))
 texfiles := $(wildcard $(src)/*.tex)
 
 # The default rule:
@@ -61,7 +65,20 @@ $(stage2_outdir) : $(build_outdir)
 	@echo [MKDIR] $(stage2_outdir)
 	@mkdir $(stage2_outdir)
 
+$(build_outdir)/splitabc.mk : $(BOOKNAME).abc $(build_outdir)
+	@echo [ABCSPLIT] $(BOOKNAME).abc
+	abcsplit.py -o $(abcsplit_outdir) $(BOOKNAME).abc
+	echo "SPLIT_ABC=`echo $(abcsplit_outdir)/*.abc`" > $(build_outdir)/splitabc.mk
+
 $(stage1_outdir)/%.ly : $(src)/%.abc
+	@echo [ABC2LY] $<
+# We split the recipe into two commands to be able to filter abc2ly output
+# without losing the return code:
+	@$(ABC2LY) -o $@ $< 2>$(stage1_outdir)/abc2ly.log
+	@cat $(stage1_outdir)/abc2ly.log |grep Warning \
+            |grep -v "Q specification" || true
+
+$(stage1_outdir)/%.ly : $(abcsplit_outdir)/%.abc
 	@echo [ABC2LY] $<
 # We split the recipe into two commands to be able to filter abc2ly output
 # without losing the return code:
@@ -73,7 +90,8 @@ $(stage1_outdir)/%.ly : $(src)/%.ly
 	@echo [CP] $<
 	@cp $< $@
 
-$(stage1_outdir)/$(BOOKNAME).lytex : $(lyfiles) $(lyfiles2) $(texfiles) \
+$(stage1_outdir)/$(BOOKNAME).lytex : $(BOOKNAME).abc \
+                                     $(lyfiles) $(lyfiles2) $(texfiles) \
                                      bookspecs/book_template.tex \
                                      bookspecs/tune_files.txt \
                                      bookspecs/tune_sets.txt \
@@ -82,7 +100,8 @@ $(stage1_outdir)/$(BOOKNAME).lytex : $(lyfiles) $(lyfiles2) $(texfiles) \
 	gen_tex_tunebook.py --name $(BOOKNAME)
 
 $(stage2_outdir)/$(BOOKNAME).tex : $(stage1_outdir)/$(BOOKNAME).lytex \
-                                   $(lyfiles) $(lyfiles2)
+                                   $(lyfiles) $(lyfiles2) $(lyfiles3) \
+                                   $(build_outdir)/splitabc.mk
 	@echo [LILYPOND-BOOK `$(LILYPOND_BOOK) --version`] \
             -o $(stage2_outdir)/$(BOOKNAME).tex \
             $(stage1_outdir)/$(BOOKNAME).lytex
@@ -162,6 +181,8 @@ clean :
 	@echo [CLEANING]
 	-rm -rf $(stage1_outdir)
 	-rm -rf $(stage2_outdir)
+	-rm -rf $(abcsplit_outdir)
+	-rm -f $(build_outdir)/splitabc.mk
 	-rm -f src/*.mid
 	-rm -f *~
 	-rm -f src/*~
