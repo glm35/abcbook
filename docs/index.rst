@@ -20,6 +20,7 @@ abcbook: un générateur de recueil de partitions
    :maxdepth: 3
    :caption: Documentation pour les développeurs
 
+   developer_docs/install
    developer_docs/roadmap
    developer_docs/issues
    developer_docs/ideas

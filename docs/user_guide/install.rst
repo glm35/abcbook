@@ -9,8 +9,22 @@ Dépendances
 - lilypond 2.11.26
 - Perl
 
+Version courte
+==============
+
+Sous Linux Mint::
+
+   $ sudo make install-deps-mint
+
+Sous Fedora::
+
+   $ sudo make install-deps-fedora
+
+Version longue
+==============
+
 gchords
-=======
+-------
 
 * http://www.aei.mpg.de/~peekas/gchords/
 * en cache dans tunebook/tools/gchords/gchords.sty

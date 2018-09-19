@@ -90,6 +90,8 @@ $(stage1_outdir)/%.ly : $(src)/%.ly
 	@echo [CP] $<
 	@cp $< $@
 
+lytex : $(stage1_outdir)/$(BOOKNAME).lytex
+
 $(stage1_outdir)/$(BOOKNAME).lytex : $(BOOKNAME).abc \
                                      $(lyfiles) $(lyfiles2) $(texfiles) \
                                      bookspecs/book_template.tex \
@@ -97,7 +99,7 @@ $(stage1_outdir)/$(BOOKNAME).lytex : $(BOOKNAME).abc \
                                      bookspecs/tune_sets.txt \
                                      $(GUITAR_CHORDS)
 	@echo [GEN-TEX-TUNEBOOK]
-	gen_tex_tunebook.py --name $(BOOKNAME)
+	gen_tex_tunebook.py --bookname $(BOOKNAME) --output-dir $(stage1_outdir)
 
 $(stage2_outdir)/$(BOOKNAME).tex : $(stage1_outdir)/$(BOOKNAME).lytex \
                                    $(lyfiles) $(lyfiles2) $(lyfiles3) \

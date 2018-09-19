@@ -21,6 +21,9 @@ Organisation du répertoire Tunebook::
       *.ly   # tune au format lilypond
       *.tex  # notes pour un tune au format LaTeX
 
+Le nom de fichier d'un "single tune" doit correspondre à l'identifiant généré à
+partir du titre (minuscules, on ne conserve que les lettres non accentuées et
+les chiffres, tous les autres caractères sont remplacés par un underscore.
 
 Conventions de style pour les fichiers ABC et lilypond
 ======================================================
