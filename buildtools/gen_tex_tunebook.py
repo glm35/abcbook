@@ -6,14 +6,10 @@ import re
 from optparse import OptionParser
 from pathlib import Path
 import string
+from typing import List
 
 
 # TODO list
-#
-# 1. Refactor
-# - obj_tunes vs tunes: keep only one with ordered dict
-# - tune file vs tune label
-# - other TODO's
 #
 # 2. Process each ABC file as a multi-tunes file
 # - alternatively, or to begin with, only process files without the "tunes/"
@@ -23,7 +19,7 @@ import string
 # Global variables
 # ------------------------------------------------------------------------
 
-TUNE_SETS_FILENAME = "bookspecs/tune_sets.txt"
+TUNE_SETS_FILENAME = 'bookspecs/tune_sets.txt'
 
 CLI_OPTIONS = None
 CLI_ARGS = None
@@ -46,8 +42,8 @@ def main():
 
 def parse_command_line():
     parser = OptionParser()
-    parser.add_option("-b", "--bookname", dest="bookname", default="tunebook",
-                      help="set the tunebook name")
+    parser.add_option('-b', '--bookname', dest='bookname', default='tunebook',
+                      help='set the tunebook name')
     parser.add_option('-o', '--output-dir', dest='output_dir', type=str,
                       default='_build/out.stage1',
                       help='directory to write the lilypond book '
@@ -81,17 +77,6 @@ def gen_book(book_path: Path, tune_files_path: Path):
         None
     """
 
-    # The dictionnary of tunes
-    #
-    # For each tune identified by its label, it contains the title and the
-    # type of the tune.
-    #
-    # key: label
-    # value: dictionnary that contains the data for the tune labelled by the
-    # key:
-    #    keys: "title", "type"
-    tunes = {}  # TODO? use ordered dict to keep order?
-
     tune_file_paths = read_tune_file_list(tune_files_path)
 
     with open(CLI_OPTIONS.template, 'r') as f:
@@ -99,11 +84,10 @@ def gen_book(book_path: Path, tune_files_path: Path):
 
     with open(book_path, 'w') as f:
         # Step 1: copy template lines until %%INSERT_TUNES to tunebook
-        f.writelines(eat_up_template(template, "%%INSERT_TUNES\n"))
+        f.writelines(eat_up_template(template, '%%INSERT_TUNES\n'))
 
         # Step 2: insert tunes in tunebook
-        obj_tunes = []  # TODO: rename: what's the difference with the "tunes"
-                        # global variable?
+        tunes = []  # List of Tune objects
         for tune_file in tune_file_paths:
             # TODO: process each tune file as if it contained several tunes
             # (even if abcbook.mk can actually deal with only one multi-tune
@@ -113,27 +97,26 @@ def gen_book(book_path: Path, tune_files_path: Path):
             if title is None:
                 print('Error: no title in tune: ' + str(tune_file))
                 sys.exit(1)
-            label = title_to_id(title)
-            tunes[label] = {'title': title, 'type': tune_type}
-            obj_tunes.append(Tune(label, title, tune_type))
+            label = title_to_label(title)
+            tunes.append(Tune(label, title, tune_type))
             f.writelines(gen_tune(label, title, tune_type))
 
         # Step 3: copy template lines until %%INSERT_INDEX to tunebook
-        f.writelines(eat_up_template(template, "%%INSERT_INDEX\n"))
+        f.writelines(eat_up_template(template, '%%INSERT_INDEX\n'))
 
         # Step 4: generate index of tunes and write it to tunebook
-        f.write("\\twocolumn\n")
-        f.write(gen_index_of_tunes(obj_tunes))
+        f.write('\\twocolumn\n')
+        f.write(gen_index_of_tunes(tunes))
 
         # Step 5: generate index of sets and write it to tunebook
-        f.write("\\onecolumn\n")
+        f.write('\\onecolumn\n')
         f.writelines(gen_index_of_sets(tunes))
 
         # Step 6: copy remaining template lines to tunebook
         f.writelines(eat_up_template(template))
 
 
-def read_tune_file_list(tune_files_path):
+def read_tune_file_list(tune_files_path: Path) -> List[Path]:
     """
     Read the file containing the list of music files (ABC, LilyPond) and
     return the list.
@@ -169,20 +152,24 @@ def eat_up_template(template, tag=None):
 
 @total_ordering
 class Tune:
-    def __init__(self, label="", title="", type=""):
+    """Store a tune's metadata and can be sorted based on title
+    """
+    def __init__(self, label='', title='', tune_type=''):
         self.label = label
         self.title = title
-        self.type = type
+        self.type = tune_type
+
+        self.index_title = demote_determinant(self.title)
 
     def __eq__(self, other):
-        return self.title.lower() == other.title.lower()
+        return self.index_title.lower() == other.index_title.lower()
 
     def __lt__(self, other):
-        return self.title.lower() < other.title.lower()
+        return self.index_title.lower() < other.index_title.lower()
 
     def __cmp__(self, other):
-        x = self.title.lower()
-        y = other.title.lower()
+        x = self.index_title.lower()
+        y = other.index_title.lower()
         if x > y:
             return 1
         elif x == y:
@@ -193,20 +180,12 @@ class Tune:
     def __str__(self):
         return self.title
 
-    def format_index_entry(self):
-        if self.type == None or self.type == "":
-            entry = "\emph{{{0}}},~p.\pageref{{{1}}}".format(self.title, self.label)
-        else:
-            # Example: \emph{Come Upstairs with Me}~(slip jig),~p.\pageref{come_upstairs_with_me}
-            entry = "\emph{{{0}}}~({1}),~p.\pageref{{{2}}}".format(self.title, self.type, self.label)
-        return entry
-
 
 # ------------------------------------------------------------------------
-#     Parse tunes, create tune id
+#     Parse tunes, create tune label
 # ------------------------------------------------------------------------
 
-def get_tune_metadata(tune_path):
+def get_tune_metadata(tune_path: Path):
     """
     Find and return the title and type of tune found in the given
     tune file
@@ -217,23 +196,21 @@ def get_tune_metadata(tune_path):
     Returns:
         a tuple (title, type)
     """
-    title, type = None, None
-
     # TODO: refactor with ABC parser; use one function per type of file
 
     try:
         with open (tune_path, 'r') as f:
-            tune = f.readlines()
+            tune_lines = f.readlines()
     except FileNotFoundError:
-        print('Error: File not found: ' + str(tune_path))
+        sys.stderr.write(f'Error: File not found: {tune_path}\n')
         sys.exit(1)
 
-    title, type = get_metadata(tune, tune_path.suffix)
-    return title, type
+    title, tune_type = get_metadata(tune_path, tune_lines, tune_path.suffix)
+    return title, tune_type
 
 
-def get_metadata(tune, ext):
-    title, type = None, None
+def get_metadata(tune_path: Path, tune_lines: List[str], ext):
+    title, tune_type = None, None
 
     if ext == '.abc':
         title_re = re.compile('^T:(.*)$')
@@ -242,11 +219,12 @@ def get_metadata(tune, ext):
         title_re = re.compile('^\s*title\s*=\s*"(.*)"$')
         type_re = re.compile('^\s*meter\s*=\s*"(.*)"$')
     else:
-        return None, None
-        #TODO: issue an error (unsupported file type)
+        sys.stderr.write(f'Error: Unsupported tune file type: {tune_path}\n')
+        sys.stderr.write(f'(Supported types: ABC (.abc), LilyPond (.ly))\n')
+        sys.exit(1)
 
-    for line in tune:
-        if title and type:
+    for line in tune_lines:
+        if title and tune_type:
             break
 
         if not title:
@@ -255,20 +233,20 @@ def get_metadata(tune, ext):
                 title = m.group(1).strip()
                 continue
 
-        if not type:
+        if not tune_type:
             m = type_re.match(line)
             if m:
-                type = m.group(1).strip().lower()
+                tune_type = m.group(1).strip().lower()
                 continue
 
-    return title, type
+    return title, tune_type
 
 
-def title_to_id(tune_title: str) -> str:
+def title_to_label(tune_title: str) -> str:
     """
-    Generate a tune identifier from a tune title
+    Generate a tune label from a tune title
 
-    The identifier is obtained by converting the tune title to lower case
+    The label is obtained by converting the tune title to lower case
     and then substituting all characters that are neither lower case ascii
     characters nor digits to '_'
 
@@ -276,9 +254,9 @@ def title_to_id(tune_title: str) -> str:
         tune_title: The tune title, eg "Brid Harper's"
 
     Returns:
-        The tune id, eg 'brid_harper_s'
+        The tune label, eg 'brid_harper_s'
     """
-    id = ''
+    label = ''
     for c in tune_title.lower():
         if not (c in string.ascii_lowercase or c in string.digits):
             if c is 'í':
@@ -289,8 +267,8 @@ def title_to_id(tune_title: str) -> str:
                 c = 'o'
             else:
                 c = '_'
-        id += c
-    return id
+        label += c
+    return label
     #TODO: move to abc.py and factorize with abcsplit.py
 
 
@@ -305,13 +283,13 @@ def gen_tune_header(title, type=None):
     #    header.insert (2, " (" + type + ")")
     #return "".join(header)
     #header = "\\paragraph{}\n\\begin{figure}[p]\n"
-    header = "\\begin{figure}[H]\n"
+    header = '\\begin{figure}[H]\n'
     return header
 
 
 def gen_tune_label(label):
     tex_label = ['\\label{', label, '}\n']
-    return "".join(tex_label)
+    return ''.join(tex_label)
 
 
 def gen_lilypond_block(label):
@@ -332,12 +310,12 @@ def gen_lilypond_block(label):
     #block.append('\\linebreak\n')
     #block.append('\\clearpage\n')
 
-    return "".join(block)
+    return ''.join(block)
 
 
-def gen_tune(label, title, type):
+def gen_tune(label, title, tune_type):
     data = []
-    data.append(gen_tune_header(title, type))
+    data.append(gen_tune_header(title, tune_type))
     data.append(gen_tune_label(label))
 #    try:
 #        f = open(tune_dir + "/" + label + ".tex")
@@ -357,32 +335,42 @@ def gen_tune(label, title, type):
 #     Generate the index of tunes
 # ------------------------------------------------------------------------
 
-def gen_index_of_tunes(tunes):
-    sorted_tunes = sort_tunes(tunes)
-    latex_index = "\\section*{Index des airs}\n"
+def gen_index_of_tunes(tunes: List[Tune]):
+    tunes.sort()
+    latex_index = '\\section*{Index des airs}\n'
     for tune in tunes:
-        latex_index += tune.format_index_entry() + "\n\n"
+        latex_index += format_index_entry(tune) + '\n\n'
     return latex_index
 
 
-def sort_tunes(tunes):
-    sorted_tunes = tunes  # TODO: Useless: object is sorted in place
-                          # (also: no need to return)
-                          # Alternatively: make a copy of the list
-    for tune in sorted_tunes:
-        tune.title = demote_determinant(tune.title)
-    sorted_tunes.sort()
-    return sorted_tunes
+def format_index_entry(tune: Tune):
+    if tune.type is None or tune.type == '':
+        entry = '\emph{{{0}}},~p.\pageref{{{1}}}'.format(
+            tune.index_title, tune.label)
+    else:
+        # Example: \emph{Come Upstairs with Me}~(slip jig),~p.\pageref{come_upstairs_with_me}
+        entry = '\emph{{{0}}}~({1}),~p.\pageref{{{2}}}'.format(
+            tune.index_title, tune.type, tune.label)
+    return entry
 
 
-def demote_determinant(title):
+def demote_determinant(title: str) -> str:
+    """Given a tune title, return a title adapted for indexing, eg
+       'The Miller's Maggot' => 'Miller's Maggot, The'
+
+    Args:
+        title: tune title
+
+    Returns:
+        tune title with demoted determinant
+    """
     words = title.split()
-    if words == []:
+    if len(words) == 0:
         return title
     determinant = words[0]
-    if determinant.lower() in ["the", "les", "le"]:
-        index_title = " ".join(words[1:])
-        index_title += ", " + determinant
+    if determinant.lower() in ['the', 'les', 'le']:
+        index_title = ' '.join(words[1:])
+        index_title += ', ' + determinant
         return index_title
     else:
         return title
@@ -392,17 +380,18 @@ def demote_determinant(title):
 #     Generate the index of sets
 # ------------------------------------------------------------------------
 
-def gen_index_of_sets(tunes):
+def gen_index_of_sets(tunes: List[Tune]):
+    try:
+        f = open(TUNE_SETS_FILENAME)
+    except:
+        sys.stderr.write('Error: Cannot open ' + TUNE_SETS_FILENAME + '\n')
+        sys.exit(1)
+
     data = []
     data.append('\n\n')
     #data.append('\\pagebreak\n')
     data.append('\\section*{Index des suites}\n')
-
-    try:
-        f = open(TUNE_SETS_FILENAME)
-    except:
-        sys.stderr.write("Warning: Cannot open " + TUNE_SETS_FILENAME + "\n")
-        return []
+    # TODO: if no set in tune_sets.txt, do not show section name
 
     for lineno, line in enumerate(f):
         # Each line contains a comma separated list of labels.
@@ -414,70 +403,70 @@ def gen_index_of_sets(tunes):
         if line[0] == '#':
             continue
         (set_title, set_tunes) = split_title_and_tunes(line)
-        labels = set_tunes.split(',')
-        entry = []
-        tune_set = []
-        for label in labels:
+        tunes_in_set = []
+        for label in set_tunes.split(','):
             label = label.strip()
-            if label not in tunes.keys():
-                sys.stderr.write(TUNE_SETS_FILENAME + ":" + str(lineno + 1) + " " +
-                                 "Warning: No matching tune for index label " +
-                                 label + "\n")
-                continue
-            tune_set.append(Tune(label, tunes[label]['title'], tunes[label]['type']))
-        index_entry = format_set_index_entry(tune_set, set_title)
-        data.append(index_entry + "\n\n")
+            try:
+                tune = [tune for tune in tunes if tune.label == label][0]
+                tunes_in_set.append(tune)
+            except IndexError:
+                sys.stderr.write(TUNE_SETS_FILENAME + ':' + str(lineno + 1) +
+                                 ' Warning: No matching tune for index label ' +
+                                 label + '\n')
+        index_entry = format_set_index_entry(tunes_in_set, set_title)
+        data.append(index_entry + '\n\n')
 
     f.close()
     return data
 
 
 def split_title_and_tunes(index_entry):
-    if -1 == index_entry.find(":"):
+    if -1 == index_entry.find(':'):
         # No title
-        return ("", index_entry.strip())
+        return ('', index_entry.strip())
 
-    l = index_entry.split(":")
+    l = index_entry.split(':')
     tunes = l[1].strip()
     title = l[0].strip()
     return (title, tunes)
 
-def format_set_index_entry(tunes, title=""):
-    entry = ""
+
+def format_set_index_entry(tunes_in_set: List[Tune], title=''):
+    entry = ''
 
     # Do all the tunes have the same type?
     same_type = True
-    set_type = ""
-    for tune in tunes:
-        if tune.type == None:
-            tune.type = ""
-        if set_type == "":
+    set_type = ''
+    for tune in tunes_in_set:
+        if tune.type is None:
+            tune.type = ''
+        if set_type == '':
             set_type = tune.type
         else:
             if set_type != tune.type:
                 same_type = False
                 break
 
-    if title != "":
+    if title != '':
         entry = '\emph{' + title + '}'
 
     factorize_type = False
-    if len(tunes) >= 2:
-        if same_type and set_type != "":
-            if title != "":
-                entry += " (" + set_type.lower() + "s" + ")"
+    if len(tunes_in_set) >= 2:
+        if same_type and set_type != '':
+            if title != '':
+                entry += ' (' + set_type.lower() + 's' + ')'
             else:
-                entry += set_type.capitalize() + "s"
+                entry += set_type.capitalize() + 's'
             factorize_type = True
 
-    if title != "" or factorize_type:
+    if title != '' or factorize_type:
         entry += ': '
 
     first_tune = True
-    for tune in tunes:
+    for tune in tunes_in_set:
         tune_ref = '\emph{' + tune.title + '}'
         tune_ref += '~('
-        if tune.type != "" and tune.type != None and not factorize_type:
+        if tune.type != '' and tune.type != None and not factorize_type:
             tune_ref += tune.type + ',~'
         tune_ref += 'p.\pageref{' + tune.label + '}'
         tune_ref += ')'
