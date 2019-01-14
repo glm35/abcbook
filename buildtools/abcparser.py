@@ -100,6 +100,10 @@ def title_to_label(tune_title: str) -> str:
                 c = 'u'
             elif c is 'ó':
                 c = 'o'
+            elif c is 'ç':
+                c = 'c'
+            elif c is 'é' or c is 'è' or c is 'ê':
+                c = 'e'
             else:
                 c = '_'
         label += c
