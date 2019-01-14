@@ -2,10 +2,8 @@
 # -*- coding:utf-8 -*-
 
 import unittest
-import filecmp
-import os
 
-import gen_tex_tunebook
+from abcparser import demote_determinant
 from gen_tex_tunebook import *
 
 # unittest reminder:
@@ -14,45 +12,30 @@ from gen_tex_tunebook import *
 class TestTuneIndex(unittest.TestCase):
 
     def test_format_tune_index_entry(self):
-        tune = Tune()
-        tune.title = "Come Upstairs with Me"
-        tune.type = "slip jig"
-        tune.label = "come_upstairs_with_me"
-
+        tune = Tune("Come Upstairs with Me", "slip jig")
         expected_result = "\emph{Come Upstairs with Me}~(slip jig),~p.\pageref{come_upstairs_with_me}"
-
-        self.assertEqual(expected_result, tune.format_index_entry())
+        self.assertEqual(expected_result, format_index_entry(tune))
 
     def test_format_tune_index_entry_empty_type(self):
-        tune = Tune()
-        tune.title = "Come Upstairs with Me"
-        tune.type = ""
-        tune.label = "come_upstairs_with_me"
-
+        tune = Tune(title = "Come Upstairs with Me", tune_type="")
         expected_result = "\emph{Come Upstairs with Me},~p.\pageref{come_upstairs_with_me}"
-
-        self.assertEqual(expected_result, tune.format_index_entry())
+        self.assertEqual(expected_result, format_index_entry(tune))
 
     def test_format_tune_index_entry_no_type(self):
-        tune = Tune()
-        tune.title = "Come Upstairs with Me"
-        tune.type = None
-        tune.label = "come_upstairs_with_me"
-
+        tune = Tune(title="Come Upstairs with Me", tune_type=None)
         expected_result = "\emph{Come Upstairs with Me},~p.\pageref{come_upstairs_with_me}"
-
-        self.assertEqual(expected_result, tune.format_index_entry())
+        self.assertEqual(expected_result, format_index_entry(tune))
 
     def test_sort_by_name(self):
-        tunes = [Tune("yellow_tinker", "Yellow Tinker", "reel"),
-                 Tune("come_upstairs_with_me", "Come Upstairs with Me", "slip jig"),
-                 Tune("mistress_on_the_floor", "Mistress on the Floor", "reel")]
+        tunes = [Tune("Yellow Tinker", "reel"),
+                 Tune("Come Upstairs with Me", "slip jig"),
+                 Tune("Mistress on the Floor", "reel")]
 
-        sorted_tunes = sort_tunes(tunes)
+        tunes.sort()
 
-        self.assertEqual([Tune("come_upstairs_with_me", "Come Upstairs with Me", "slip jig"),
-                          Tune("mistress_on_the_floor", "Mistress on the Floor", "reel"),
-                          Tune("yellow_tinker", "Yellow Tinker", "reel")], sorted_tunes)
+        self.assertEqual([Tune("Come Upstairs with Me", "slip jig"),
+                          Tune("Mistress on the Floor", "reel"),
+                          Tune("Yellow Tinker", "reel")], tunes)
 
     def test_demote_determinant(self):
         self.assertEqual("Yellow Tinker, The", demote_determinant("The Yellow Tinker"))
@@ -78,24 +61,24 @@ class TestTuneIndex(unittest.TestCase):
         return text
 
     def test_sort_by_name_demote_determinant(self):
-        tunes = [Tune("the_humours_of_whiskey", "The Humours of Whiskey", "slip jig"),
-                 Tune("come_upstairs_with_me", "Come Upstairs with Me", "slip jig"),
-                 Tune("mistress_on_the_floor", "Mistress on the Floor", "reel")]
+        tunes = [Tune("The Humours of Whiskey", "slip jig"),
+                 Tune("Come Upstairs with Me", "slip jig"),
+                 Tune("Mistress on the Floor", "reel")]
 
-        sorted_tunes = sort_tunes(tunes)
+        tunes.sort()
 
-        expected_sorted_tunes = [Tune("come_upstairs_with_me", "Come Upstairs with Me", "slip jig"),
-                                 Tune("the_humours_of_whiskey", "Humours of Whiskey, The", "slip jig"),
-                                 Tune("mistress_on_the_floor", "Mistress on the Floor", "reel")]
+        expected_sorted_tunes = [Tune("Come Upstairs with Me", "slip jig"),
+                                 Tune("Humours of Whiskey, The", "slip jig"),
+                                 Tune("Mistress on the Floor", "reel")]
 
-        self.assertEqual(expected_sorted_tunes, sorted_tunes,
-                         self.prepare_exception_text(expected_sorted_tunes, sorted_tunes))
+        self.assertEqual(expected_sorted_tunes, tunes,
+                         self.prepare_exception_text(expected_sorted_tunes, tunes))
 
     def test_gen_index_of_tunes(self):
-        tunes = [Tune("the_humours_of_whiskey", "The Humours of Whiskey", "slip jig"),
-                 Tune("come_upstairs_with_me", "Come Upstairs with Me", "slip jig"),
-                 Tune("toss_the_feathers", "Toss the Feathers", "reel"),
-                 Tune("mistress_on_the_floor", "Mistress on the Floor", "reel")]
+        tunes = [Tune("The Humours of Whiskey", "slip jig"),
+                 Tune("Come Upstairs with Me", "slip jig"),
+                 Tune("Toss the Feathers", "reel"),
+                 Tune("Mistress on the Floor", "reel")]
 
         latex_index = gen_index_of_tunes(tunes)
 
@@ -116,9 +99,9 @@ class TestTuneIndex(unittest.TestCase):
 class TestFormatSetIndexEntry(unittest.TestCase):
 
     def test_set_index_entry(self):
-        tunes = [Tune("our_kate", "Our Kate", "slow air"),
-                 Tune("unnamed_jig_2", "Unnamed Jig 2", "jig"),
-                 Tune("paddy_fahy_s", "Paddy Fahy's", "reel")]
+        tunes = [Tune(title="Our Kate", tune_type="slow air"),
+                 Tune("Unnamed Jig 2", "jig"),
+                 Tune("Paddy Fahy's", "reel")]
         expected_index_entry = r"""\emph{Our Kate}~(slow air,~p.\pageref{our_kate})~/ \emph{Unnamed Jig 2}~(jig,~p.\pageref{unnamed_jig_2})~/ \emph{Paddy Fahy's}~(reel,~p.\pageref{paddy_fahy_s})"""
 
         index_entry = format_set_index_entry(tunes)
@@ -127,9 +110,9 @@ class TestFormatSetIndexEntry(unittest.TestCase):
 
     def test_set_index_entry_no_type(self):
         # One entry without type
-        tunes = [Tune("our_kate", "Our Kate", "slow air"),
-                 Tune("mysterious_tune", "The Mysterious Tune")]
-        expected_index_entry = r"""\emph{Our Kate}~(slow air,~p.\pageref{our_kate})~/ \emph{The Mysterious Tune}~(p.\pageref{mysterious_tune})"""
+        tunes = [Tune("Our Kate", "slow air"),
+                 Tune("The Mysterious Tune")]
+        expected_index_entry = r"""\emph{Our Kate}~(slow air,~p.\pageref{our_kate})~/ \emph{The Mysterious Tune}~(p.\pageref{the_mysterious_tune})"""
 
         index_entry = format_set_index_entry(tunes)
 
@@ -137,9 +120,9 @@ class TestFormatSetIndexEntry(unittest.TestCase):
 
     def test_set_index_entry_no_type2(self):
         # One entry without type
-        tunes = [Tune("our_kate", "Our Kate", "slow air"),
-                 Tune("mysterious_tune", "The Mysterious Tune", None)]
-        expected_index_entry = r"""\emph{Our Kate}~(slow air,~p.\pageref{our_kate})~/ \emph{The Mysterious Tune}~(p.\pageref{mysterious_tune})"""
+        tunes = [Tune("Our Kate", "slow air"),
+                 Tune("The Mysterious Tune", None)]
+        expected_index_entry = r"""\emph{Our Kate}~(slow air,~p.\pageref{our_kate})~/ \emph{The Mysterious Tune}~(p.\pageref{the_mysterious_tune})"""
 
         index_entry = format_set_index_entry(tunes)
 
@@ -147,8 +130,8 @@ class TestFormatSetIndexEntry(unittest.TestCase):
 
     def test_set_index_entry_factorize_type(self):
         # All the entries have the same type
-        tunes = [Tune("the_mountain_road", "The Mountain Road", "reel"),
-                 Tune("the_twelve_pins", "The Twelve Pins", "reel")]
+        tunes = [Tune("The Mountain Road", "reel"),
+                 Tune("The Twelve Pins", "reel")]
         expected_index_entry = r"""Reels: \emph{The Mountain Road}~(p.\pageref{the_mountain_road})~/ \emph{The Twelve Pins}~(p.\pageref{the_twelve_pins})"""
 
         index_entry = format_set_index_entry(tunes)
@@ -157,9 +140,9 @@ class TestFormatSetIndexEntry(unittest.TestCase):
 
     def test_set_index_entry_no_type_at_all(self):
         # Factorization does not apply here
-        tunes = [Tune("our_kate", "Our Kate", None),
-                 Tune("mysterious_tune", "The Mysterious Tune", None)]
-        expected_index_entry = r"""\emph{Our Kate}~(p.\pageref{our_kate})~/ \emph{The Mysterious Tune}~(p.\pageref{mysterious_tune})"""
+        tunes = [Tune("Our Kate", None),
+                 Tune("The Mysterious Tune", None)]
+        expected_index_entry = r"""\emph{Our Kate}~(p.\pageref{our_kate})~/ \emph{The Mysterious Tune}~(p.\pageref{the_mysterious_tune})"""
 
         index_entry = format_set_index_entry(tunes)
 
@@ -167,7 +150,7 @@ class TestFormatSetIndexEntry(unittest.TestCase):
 
     def test_set_index_entry_only_one_tune(self):
         # One entry without type
-        tunes = [Tune("our_kate", "Our Kate", "slow air")]
+        tunes = [Tune("Our Kate", "slow air")]
         expected_index_entry = r"""\emph{Our Kate}~(slow air,~p.\pageref{our_kate})"""
 
         index_entry = format_set_index_entry(tunes)
@@ -175,9 +158,9 @@ class TestFormatSetIndexEntry(unittest.TestCase):
         self.assertEqual(expected_index_entry, index_entry)
 
     def test_set_index_with_title(self):
-        tunes = [Tune("our_kate", "Our Kate", "slow air"),
-                 Tune("unnamed_jig_2", "Unnamed Jig 2", "jig"),
-                 Tune("paddy_fahy_s", "Paddy Fahy's", "reel")]
+        tunes = [Tune("Our Kate", "slow air"),
+                 Tune("Unnamed Jig 2", "jig"),
+                 Tune("Paddy Fahy's", "reel")]
         expected_index_entry = r"""\emph{The Old Set}: \emph{Our Kate}~(slow air,~p.\pageref{our_kate})~/ \emph{Unnamed Jig 2}~(jig,~p.\pageref{unnamed_jig_2})~/ \emph{Paddy Fahy's}~(reel,~p.\pageref{paddy_fahy_s})"""
 
         index_entry = format_set_index_entry(tunes, "The Old Set")
@@ -186,8 +169,8 @@ class TestFormatSetIndexEntry(unittest.TestCase):
 
     def test_set_index_entry_factorize_type_with_title(self):
         # All the entries have the same type
-        tunes = [Tune("the_mountain_road", "The Mountain Road", "reel"),
-                 Tune("the_twelve_pins", "The Twelve Pins", "reel")]
+        tunes = [Tune("The Mountain Road", "reel"),
+                 Tune("The Twelve Pins", "reel")]
         expected_index_entry = r"""\emph{The Snowy Set} (reels): \emph{The Mountain Road}~(p.\pageref{the_mountain_road})~/ \emph{The Twelve Pins}~(p.\pageref{the_twelve_pins})"""
 
         index_entry = format_set_index_entry(tunes, "The Snowy Set")
@@ -200,32 +183,32 @@ class TestParseSet(unittest.TestCase):
 
     def test_split_title_and_tunes(self):
         index_entry = "The Oran Set: les_ridees_de_lanvaudan, union_street_session, the_rolling_waves_of_frehel"
-        (index_title, index_tunes) = split_title_and_tunes(index_entry)
-        self.assertEqual("The Oran Set", index_title)
+        (title_for_index, index_tunes) = split_title_and_tunes(index_entry)
+        self.assertEqual("The Oran Set", title_for_index)
         self.assertEqual("les_ridees_de_lanvaudan, union_street_session, the_rolling_waves_of_frehel", index_tunes)
 
     def test_split_title_and_tunes_no_title(self):
         index_entry = "les_ridees_de_lanvaudan, union_street_session, the_rolling_waves_of_frehel"
-        (index_title, index_tunes) = split_title_and_tunes(index_entry)
-        self.assertEqual("", index_title)
+        (title_for_index, index_tunes) = split_title_and_tunes(index_entry)
+        self.assertEqual("", title_for_index)
         self.assertEqual("les_ridees_de_lanvaudan, union_street_session, the_rolling_waves_of_frehel", index_tunes)
 
     def test_split_title_and_tunes_no_title_spurious_spaces(self):
         index_entry = "   les_ridees_de_lanvaudan, union_street_session, the_rolling_waves_of_frehel   "
-        (index_title, index_tunes) = split_title_and_tunes(index_entry)
-        self.assertEqual("", index_title)
+        (title_for_index, index_tunes) = split_title_and_tunes(index_entry)
+        self.assertEqual("", title_for_index)
         self.assertEqual("les_ridees_de_lanvaudan, union_street_session, the_rolling_waves_of_frehel", index_tunes)
 
     def test_split_title_and_tunes_empty_title(self):
         index_entry = "    :les_ridees_de_lanvaudan, union_street_session, the_rolling_waves_of_frehel"
-        (index_title, index_tunes) = split_title_and_tunes(index_entry)
-        self.assertEqual("", index_title)
+        (title_for_index, index_tunes) = split_title_and_tunes(index_entry)
+        self.assertEqual("", title_for_index)
         self.assertEqual("les_ridees_de_lanvaudan, union_street_session, the_rolling_waves_of_frehel", index_tunes)
 
     def test_split_title_and_tunes_no_tune(self):
         index_entry = "The Oran Set:"
-        (index_title, index_tunes) = split_title_and_tunes(index_entry)
-        self.assertEqual("The Oran Set", index_title)
+        (title_for_index, index_tunes) = split_title_and_tunes(index_entry)
+        self.assertEqual("The Oran Set", title_for_index)
         self.assertEqual("", index_tunes)
 
 

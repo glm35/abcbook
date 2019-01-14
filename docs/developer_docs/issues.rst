@@ -2,6 +2,13 @@
 Problèmes connus
 ================
 
+Problèmes non ciblés
+====================
+
+- LaTeX n'accepte pas les # dans la commande \emph (eg "Paddy Fahey's #20":
+  erreur lors de la construction de l'index)
+
+
 abc4ly
 ======
 
