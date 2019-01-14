@@ -107,6 +107,7 @@ $(stage2_outdir)/$(BOOKNAME).tex : $(stage1_outdir)/$(BOOKNAME).lytex \
 	@echo [LILYPOND-BOOK `$(LILYPOND_BOOK) --version`] \
             -o $(stage2_outdir)/$(BOOKNAME).tex \
             $(stage1_outdir)/$(BOOKNAME).lytex
+	@echo "(See error in $(stage2_outdir)/lilypond-book.log)"
 	cd $(stage2_outdir) && \
             $(LILYPOND_BOOK) ../../$(stage1_outdir)/$(BOOKNAME).lytex \
             &> lilypond-book.log
