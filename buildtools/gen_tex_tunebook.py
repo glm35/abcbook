@@ -14,7 +14,6 @@ from abcparser import Tune, parse_abc_file
 
 # TODO list
 #
-# - Refactor abcsplit.py using abcparser.py
 # - Use logging instead of print() and sys.stdout.write()
 # - Other TODO's in the code
 
@@ -111,13 +110,34 @@ def gen_book(book_path: Path, tune_files_path: Path):
             new_tunes = []
 
             if path.suffix == '.abc':
-                new_tunes = parse_abc_file(path)
-                # Remark: here we process each ABC file as if it contained
+                # Here we process each ABC file as if it contained
                 # several tunes, even if abcbook.mk can actually deal with
                 # only one multi-tune ABC file.
+                new_tunes = parse_abc_file(path)
+
+                if book_path.stem != path.stem:
+                    # We are not processing the main ABC file, so we should
+                    # have a single-tune abc file: we will
+                    # do a few checks to help troubleshooting when
+                    # lilypond-book fails.
+
+                    if len(new_tunes) == 0:
+                        logging.warning('No tune in ABC file: %s', path)
+                    elif len(new_tunes) == 1:
+                        if new_tunes[0].label != path.stem:
+                            logging.warning('ABC file name does not match '
+                                            'ABC tune title: %s', path)
+                            logging.warning('    (should be: %s)',
+                                            path.parent /
+                                            Path(new_tunes[0].label + '.abc'))
+                    else:
+                        logging.warning('More than one tune in ABC file: %s',
+                                        path)
+
             elif path.suffix == '.ly':
                 title, tune_type = get_lilypond_tune_metadata(path)
                 new_tunes.append(Tune(title, tune_type))
+
             else:
                 sys.stderr.write(
                     f'Error: Unsupported tune file type: {path}\n')
