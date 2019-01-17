@@ -14,7 +14,6 @@ from abcparser import Tune, parse_abc_file
 
 # TODO list
 #
-# - Use logging instead of print() and sys.stdout.write()
 # - Other TODO's in the code
 
 # ------------------------------------------------------------------------
@@ -139,10 +138,8 @@ def gen_book(book_path: Path, tune_files_path: Path):
                 new_tunes.append(Tune(title, tune_type))
 
             else:
-                sys.stderr.write(
-                    f'Error: Unsupported tune file type: {path}\n')
-                sys.stderr.write(
-                    f'(Supported types: ABC (.abc), LilyPond (.ly))\n')
+                logging.error('Unsupported tune file type for: %s', path)
+                logging.error('--- Supported types: ABC (.abc), LilyPond (.ly)')
                 sys.exit(1)
 
             for tune in new_tunes:
@@ -336,7 +333,7 @@ def gen_index_of_sets(tunes: List[Tune]):
     try:
         f = open(TUNE_SETS_FILENAME)
     except:
-        sys.stderr.write('Error: Cannot open ' + TUNE_SETS_FILENAME + '\n')
+        logging.error('Cannot open: %s', TUNE_SETS_FILENAME)
         sys.exit(1)
 
     data = []
@@ -345,7 +342,7 @@ def gen_index_of_sets(tunes: List[Tune]):
     data.append('\\section*{Index des suites}\n')
     # TODO: if no set in tune_sets.txt, do not show section name
 
-    for lineno, line in enumerate(f):
+    for lineno, line in enumerate(f, start=1):
         # Each line contains a comma separated list of labels.
         # A line can be empty
         # A line can be a comment starting with #
@@ -362,9 +359,8 @@ def gen_index_of_sets(tunes: List[Tune]):
                 tune = [tune for tune in tunes if tune.label == label][0]
                 tunes_in_set.append(tune)
             except IndexError:
-                sys.stderr.write(TUNE_SETS_FILENAME + ':' + str(lineno + 1) +
-                                 ' Warning: No matching tune for index label ' +
-                                 label + '\n')
+                logging.warning('%s:%d: no tune match label: %s',
+                                TUNE_SETS_FILENAME, lineno, label)
         index_entry = format_set_index_entry(tunes_in_set, set_title)
         data.append(index_entry + '\n\n')
 
