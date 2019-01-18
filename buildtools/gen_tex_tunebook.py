@@ -15,6 +15,8 @@ from abcparser import Tune, parse_abc_file
 # TODO list
 #
 # - Other TODO's in the code
+# - Add user guide "how to create a tunebook?"
+
 
 # ------------------------------------------------------------------------
 # Global variables
@@ -155,8 +157,7 @@ def gen_book(book_path: Path, tune_files_path: Path):
         f.write(gen_index_of_tunes(tunes))
 
         # Step 5: generate index of sets and write it to tunebook
-        f.write('\\onecolumn\n')
-        f.writelines(gen_index_of_sets(tunes))
+        f.writelines(gen_index_of_sets(TUNE_SETS_FILENAME, tunes))
 
         # Step 6: copy remaining template lines to tunebook
         f.writelines(eat_up_template(template))
@@ -329,19 +330,33 @@ def format_index_entry(tune: Tune) -> str:
 #     Generate the index of sets
 # ------------------------------------------------------------------------
 
-def gen_index_of_sets(tunes: List[Tune]):
+def gen_index_of_sets(tune_sets_filename: str, tunes: List[Tune]) -> List[str]:
+    """
+    Build the index of tune sets
+
+    Args:
+        tune_sets_filename: name of the file that contains the list of sets
+
+        tunes: list of tunes in tunebook
+
+    Returns:
+        A list of lines in LaTeX format to be added to the tunebook.  If no
+        tune set can be found, return an empty list.
+    """
     try:
-        f = open(TUNE_SETS_FILENAME)
+        f = open(tune_sets_filename)
     except:
-        logging.error('Cannot open: %s', TUNE_SETS_FILENAME)
-        sys.exit(1)
+        logging.warning('Cannot open: %s', tune_sets_filename)
+        logging.warning('---- I will not generate an index of sets')
+        return []
 
     data = []
+    data.append('\\onecolumn\n')
     data.append('\n\n')
     #data.append('\\pagebreak\n')
     data.append('\\section*{Index des suites}\n')
-    # TODO: if no set in tune_sets.txt, do not show section name
 
+    nb_of_sets = 0
     for lineno, line in enumerate(f, start=1):
         # Each line contains a comma separated list of labels.
         # A line can be empty
@@ -360,12 +375,19 @@ def gen_index_of_sets(tunes: List[Tune]):
                 tunes_in_set.append(tune)
             except IndexError:
                 logging.warning('%s:%d: no tune match label: %s',
-                                TUNE_SETS_FILENAME, lineno, label)
+                                tune_sets_filename, lineno, label)
         index_entry = format_set_index_entry(tunes_in_set, set_title)
         data.append(index_entry + '\n\n')
+        nb_of_sets += 1
 
     f.close()
-    return data
+
+    if nb_of_sets == 0:
+        logging.warning('No set in tune sets file: %s', tune_sets_filename)
+        logging.warning('--- I will not generate an index of sets')
+        return []
+    else:
+        return data
 
 
 def split_title_and_tunes(index_entry):
