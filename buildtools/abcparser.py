@@ -19,7 +19,8 @@ from typing import List
 class Tune:
     """Store a tune's metadata and can be sorted based on title
     """
-    def __init__(self, title=None, tune_type=None, index=None):
+    def __init__(self, title=None, tune_type=None, index=None, path=None):
+        self.path = path  # Path to the ABC file containing the tune
         self.index = index  # ABC tune index (X: header)
         self.title = title
         self.type = tune_type  # Reel, Jig, ...
@@ -254,5 +255,7 @@ def parse_abc_file(abc_filepath: Path) -> List[Tune]:
                               str(abc_filepath), exc_info=True)
                 sys.exit(1)
     tunes = parser.get_tunes()
+    for tune in tunes:
+        tune.path = abc_filepath
 
     return tunes

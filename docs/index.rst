@@ -22,6 +22,7 @@ abcbook: un générateur de recueil de partitions
 
    developer_docs/install
    developer_docs/roadmap
+   developer_docs/todo
    developer_docs/issues
    developer_docs/ideas
    developer_docs/design_notes

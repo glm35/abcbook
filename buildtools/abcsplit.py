@@ -99,6 +99,10 @@ def split_abc_file(abc_filepath: Path, output_dir: Path):
         logging.info('Writing file: %s', output_file)
         with open(output_file, 'w') as f:
             f.write(tune.text)
+        # Note: if 'tune' has the same label (~ title) as an already processed
+        # tune, it will overwrite a previously created output_file.  This is
+        # certainly not desirable, but this is checked in gen_tex_tunebook.py,
+        # so it is not checked here.
 
 
 # ----------------------------------------------------------------------------

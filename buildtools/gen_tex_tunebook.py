@@ -12,11 +12,6 @@ from typing import List
 # Imports from the project library:
 from abcparser import Tune, parse_abc_file
 
-# TODO list
-#
-# - Other TODO's in the code
-# - Add user guide "how to create a tunebook?"
-
 
 # ------------------------------------------------------------------------
 # Global variables
@@ -137,7 +132,7 @@ def gen_book(book_path: Path, tune_files_path: Path):
 
             elif path.suffix == '.ly':
                 title, tune_type = get_lilypond_tune_metadata(path)
-                new_tunes.append(Tune(title, tune_type))
+                new_tunes.append(Tune(title, tune_type, path=path))
 
             else:
                 logging.error('Unsupported tune file type for: %s', path)
@@ -145,7 +140,7 @@ def gen_book(book_path: Path, tune_files_path: Path):
                 sys.exit(1)
 
             for tune in new_tunes:
-                # TODO: warning if same label used twice (show the two filenames)
+                assert_tune_uniqueness(new_tune=tune, tunes=tunes)
                 tunes.append(tune)
                 f.writelines(gen_tune(tune.label, tune.title, tune.type))
 
@@ -191,6 +186,29 @@ def eat_up_template(template, tag=None):
             break
         data.append(line)
     return data
+
+
+def assert_tune_uniqueness(new_tune: Tune, tunes: List[Tune]):
+    """
+    Check that a tune is not already present in a list of tunes and stop
+    the program with an explanatory error if so.
+
+    The check is based on the uniqueness of tune labels.  In some cases,
+    different tune titles could lead to same labels
+
+    Args:
+        new_tune: tune that should not be already in list of tunes
+        tunes: list of tunes
+
+    Returns:
+        None
+    """
+    for tune in tunes:
+        if tune.label == new_tune.label:
+            logging.error('Found two tunes with same label (~ title):')
+            logging.error('--- "%s" in %s', tune.title, tune.path)
+            logging.error('--- "%s" in %s', new_tune.title, new_tune.path)
+            sys.exit(1)
 
 
 # ------------------------------------------------------------------------
