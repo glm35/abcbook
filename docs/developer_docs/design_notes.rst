@@ -14,9 +14,41 @@ Les tunes
 L'index des tunes
 -----------------
 
-L'index des airs est affiché sur 2 colonnes
-(http://texblog.wordpress.com/2007/08/11/creating-two-columns-in-article-report-or-book/)
-en ne tenant pas compte du déterminant: "the", "a", ...
+- L'index des airs est affiché sur 2 colonnes
+  (http://texblog.wordpress.com/2007/08/11/creating-two-columns-in-article-report-or-book/)
+  en ne tenant pas compte du déterminant: "the", "a", ...
+
+- L'index est construit automatiquement.
+
+- Les tunes sont classés par ordre alphabétique après mise en retrait du
+  déterminant à la fin du tune. Par exemple, "The Yellow Tinker" devient
+  "Yellow Tinker, The".
+
+- L'index est présenté sur 2 colonnes.
+
+- Le nom du morceau est en italique.
+
+Format d'une entrée de l'index::
+
+   nom[, déterminant] (type) page
+
+Exemple::
+
+   Yellow Wattle, The (Jig) p.37
+
+
+L'index des suites
+------------------
+
+- S'il y a au moins deux tunes dans le set et si tous les tunes du set de ont
+  le même type, le type de tune est écrit en premier. Exemple::
+
+     Jigs: Father O'Flynn (p.12), Brid Harper's (p.12)
+
+- Sinon, le type de chaque tune est placé après le tune. Exemple::
+
+     Humours of Ballylaughlin (jig, p.15) / Four Courts (reel, p.16)
+
 
 Longueur de la portée
 ---------------------

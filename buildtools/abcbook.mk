@@ -204,7 +204,7 @@ help :
 	@echo "Targets to build the book:"
 	@echo "        default: dvi format"
 	@echo "        ps: Postcript format"
-	@echo "        pdf: pdf format (broken output: use ps)"
+	@echo "        pdf: pdf format"
 	@echo "Other targets:"
 	@echo "        view: view the book in dvi format"
 	@echo "        viewpdf: view the book in PDF format"
